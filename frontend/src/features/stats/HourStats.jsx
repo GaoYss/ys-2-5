@@ -1,3 +1,4 @@
+import { Lightbulb } from "lucide-react";
 import { useEffect, useState } from "react";
 import { SectionHeader } from "../../components/SectionHeader";
 import { StatCard } from "../../components/StatCard";
@@ -7,6 +8,7 @@ import { api } from "../../services/api";
 export function HourStats({ classes }) {
   const [filters, setFilters] = useState(defaultFilters);
   const [stats, setStats] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
   const [teachers, setTeachers] = useState([]);
   const [rooms, setRooms] = useState([]);
 
@@ -24,9 +26,11 @@ export function HourStats({ classes }) {
     try {
       const data = await api.getHourStats(currentFilters);
       setStats(data.items || []);
+      setSuggestions(data.suggestions || []);
     } catch (e) {
       console.warn("加载统计数据失败", e);
       setStats([]);
+      setSuggestions([]);
     }
   }
 
@@ -77,10 +81,24 @@ export function HourStats({ classes }) {
 
       <div className="table-panel">
         <SectionHeader eyebrow="Hours" title="班级课时统计" />
-        {stats.length === 0 ? (
+        {stats.length === 0 || stats.every((item) => item.planned_hours === 0) ? (
           <div className="empty-state">
-            <h3>暂无统计数据</h3>
-            <p>请调整筛选条件或先在课程表中生成排课。</p>
+            <div className="empty-icon">
+              <Lightbulb size={28} />
+            </div>
+            <h3>没有匹配的统计数据</h3>
+            {suggestions.length > 0 ? (
+              <ul className="suggestions">
+                {suggestions.map((s, idx) => (
+                  <li key={idx} className={`suggestion suggestion-${s.type}`}>
+                    <span className="suggestion-label">建议</span>
+                    {s.message}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>请调整筛选条件或先生成排课。</p>
+            )}
           </div>
         ) : (
           <div className="responsive-table">

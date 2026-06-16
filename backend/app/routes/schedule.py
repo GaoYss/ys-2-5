@@ -54,13 +54,20 @@ def list_schedule():
 def filter_options():
     from app.data.store import store
 
-    teachers = sorted({item["teacher"] for item in store.schedule})
-    rooms = sorted({item["room"] for item in store.schedule})
+    teachers = set()
+    rooms = set()
+    for item in store.schedule:
+        teachers.add(item["teacher"])
+        rooms.add(item["room"])
+    for item in store.classes:
+        teachers.add(item["teacher"])
+        rooms.add(item["room"])
+
     dates = sorted({item["date"] for item in store.schedule})
 
     return jsonify({
-        "teachers": teachers,
-        "rooms": rooms,
+        "teachers": sorted(teachers),
+        "rooms": sorted(rooms),
         "date_min": dates[0] if dates else None,
         "date_max": dates[-1] if dates else None,
     })

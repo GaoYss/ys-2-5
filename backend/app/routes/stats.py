@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 
-from app.services.statistics import calculate_hour_stats
+from app.services.statistics import build_stats_suggestions, calculate_hour_stats
 
 
 stats_bp = Blueprint("stats", __name__)
@@ -22,8 +22,19 @@ def hour_stats():
         date_to=date_to,
     )
 
+    suggestions = []
+    if not results or all(item["planned_hours"] == 0 for item in results):
+        suggestions = build_stats_suggestions(
+            class_id=class_id,
+            teacher=teacher,
+            room=room,
+            date_from=date_from,
+            date_to=date_to,
+        )
+
     return jsonify({
         "items": results,
+        "suggestions": suggestions,
         "filters": {
             "class_id": class_id or None,
             "teacher": teacher or None,
