@@ -23,18 +23,46 @@ def filter_schedule(class_id=None, teacher=None, room=None, date_from=None, date
     return results
 
 
-def build_filter_suggestions(class_id=None, teacher=None, room=None, date_from=None, date_to=None):
+def build_filter_suggestions(
+    class_id=None, teacher=None, room=None, date_from=None, date_to=None, context="schedule"
+):
     all_sessions = [enrich_session(item) for item in store.schedule]
     suggestions = []
 
+    labels = {
+        "schedule": {
+            "empty": "课程表为空，请先点击「自动生成课程表」创建排课记录。",
+            "class_none": "当前筛选的班级暂无课程，可尝试切换其他班级。",
+            "teacher_in_class": "该班级下没有「{teacher}」的课程，可尝试：{options}。",
+            "room_in_class": "当前条件下没有「{room}」教室的课，可尝试：{options}。",
+            "date_in_class": "日期范围内无课程，该条件下有课的日期：{start} 至 {end}。",
+            "teacher_global": "没有「{teacher}」的课程，可尝试：{options}。",
+            "room_global": "没有「{room}」教室的课程，可尝试：{options}。",
+            "date_global": "日期范围内无课程，系统内有课的日期：{start} 至 {end}。",
+            "fallback": "没有匹配的课程，请放宽筛选条件或先生成更多课次。",
+        },
+        "stats": {
+            "empty": "系统内暂无排课记录，统计数据基于实际排课生成，请先创建排课。",
+            "class_none": "所选班级暂无课次，暂无对应统计，可尝试切换到其他有课班级。",
+            "teacher_in_class": "该班级下没有「{teacher}」的授课统计，可尝试：{options}。",
+            "room_in_class": "当前条件下「{room}」教室无使用统计，可尝试：{options}。",
+            "date_in_class": "该日期范围内无统计数据，对应条件下有课日期：{start} 至 {end}。",
+            "teacher_global": "没有「{teacher}」的授课统计，可尝试：{options}。",
+            "room_global": "没有「{room}」教室的使用统计，可尝试：{options}。",
+            "date_global": "所选日期范围无统计数据，系统内有课日期：{start} 至 {end}。",
+            "fallback": "当前筛选条件下暂无统计数据，请放宽筛选条件或先生成更多排课。",
+        },
+    }
+    t = labels.get(context, labels["schedule"])
+
     if not all_sessions:
-        suggestions.append({"type": "info", "message": "课程表为空，请先点击「自动生成课程表」创建排课记录。"})
+        suggestions.append({"type": "info", "message": t["empty"]})
         return suggestions
 
     if class_id:
         class_match = [item for item in all_sessions if item["class_id"] == int(class_id)]
         if not class_match:
-            suggestions.append({"type": "class", "message": "当前筛选的班级暂无课程，可尝试切换其他班级。"})
+            suggestions.append({"type": "class", "message": t["class_none"]})
         else:
             remaining = class_match
             if teacher:
@@ -43,7 +71,9 @@ def build_filter_suggestions(class_id=None, teacher=None, room=None, date_from=N
                     other_teachers = sorted(set(item["teacher"] for item in remaining))
                     suggestions.append({
                         "type": "teacher",
-                        "message": f"该班级下没有「{teacher}」的课程，可尝试：{', '.join(other_teachers)}。"
+                        "message": t["teacher_in_class"].format(
+                            teacher=teacher, options=", ".join(other_teachers)
+                        ),
                     })
                 else:
                     remaining = t_match
@@ -53,7 +83,7 @@ def build_filter_suggestions(class_id=None, teacher=None, room=None, date_from=N
                     other_rooms = sorted(set(item["room"] for item in remaining))
                     suggestions.append({
                         "type": "room",
-                        "message": f"当前条件下没有「{room}」教室的课，可尝试：{', '.join(other_rooms)}。"
+                        "message": t["room_in_class"].format(room=room, options=", ".join(other_rooms)),
                     })
                 else:
                     remaining = r_match
@@ -68,7 +98,7 @@ def build_filter_suggestions(class_id=None, teacher=None, room=None, date_from=N
                     if dates:
                         suggestions.append({
                             "type": "date",
-                            "message": f"日期范围内无课程，该条件下有课的日期：{dates[0]} 至 {dates[-1]}。"
+                            "message": t["date_in_class"].format(start=dates[0], end=dates[-1]),
                         })
 
     if not class_id and teacher:
@@ -77,7 +107,7 @@ def build_filter_suggestions(class_id=None, teacher=None, room=None, date_from=N
             other_teachers = sorted(set(item["teacher"] for item in all_sessions))
             suggestions.append({
                 "type": "teacher",
-                "message": f"没有「{teacher}」的课程，可尝试：{', '.join(other_teachers)}。"
+                "message": t["teacher_global"].format(teacher=teacher, options=", ".join(other_teachers)),
             })
 
     if not class_id and room:
@@ -86,7 +116,7 @@ def build_filter_suggestions(class_id=None, teacher=None, room=None, date_from=N
             other_rooms = sorted(set(item["room"] for item in all_sessions))
             suggestions.append({
                 "type": "room",
-                "message": f"没有「{room}」教室的课程，可尝试：{', '.join(other_rooms)}。"
+                "message": t["room_global"].format(room=room, options=", ".join(other_rooms)),
             })
 
     if (date_from or date_to) and not class_id and not teacher and not room:
@@ -100,11 +130,11 @@ def build_filter_suggestions(class_id=None, teacher=None, room=None, date_from=N
             if dates:
                 suggestions.append({
                     "type": "date",
-                    "message": f"日期范围内无课程，系统内有课的日期：{dates[0]} 至 {dates[-1]}。"
+                    "message": t["date_global"].format(start=dates[0], end=dates[-1]),
                 })
 
     if not suggestions:
-        suggestions.append({"type": "info", "message": "没有匹配的课程，请放宽筛选条件或先生成更多课次。"})
+        suggestions.append({"type": "info", "message": t["fallback"]})
 
     return suggestions
 

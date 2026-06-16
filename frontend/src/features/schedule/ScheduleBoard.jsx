@@ -113,6 +113,7 @@ export function ScheduleBoard({ classes, courses, onGenerate, onScheduleChange }
               <Lightbulb size={28} />
             </div>
             <h3>没有找到匹配的课程</h3>
+            <p>当前筛选条件下无排课记录，可参考以下建议调整：</p>
             {suggestions.length > 0 ? (
               <ul className="suggestions">
                 {suggestions.map((s, idx) => (
@@ -122,9 +123,7 @@ export function ScheduleBoard({ classes, courses, onGenerate, onScheduleChange }
                   </li>
                 ))}
               </ul>
-            ) : (
-              <p>请调整筛选条件或先生成课程。</p>
-            )}
+            ) : null}
           </div>
         ) : (
           <div className="schedule-grid">

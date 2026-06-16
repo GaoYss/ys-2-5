@@ -31,6 +31,7 @@ def hour_stats():
             room=room,
             date_from=date_from,
             date_to=date_to,
+            context="stats",
         )
 
     return jsonify({
