@@ -19,7 +19,6 @@ export default function App() {
   const [courses, setCourses] = useState([]);
   const [schedule, setSchedule] = useState([]);
   const [attendance, setAttendance] = useState([]);
-  const [stats, setStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -35,19 +34,17 @@ export default function App() {
 
   async function refreshAll() {
     setError("");
-    const [classData, courseData, scheduleData, attendanceData, statsData] =
+    const [classData, courseData, scheduleData, attendanceData] =
       await Promise.all([
         api.getClasses(),
         api.getCourses(),
         api.getSchedule(),
         api.getAttendance(),
-        api.getHourStats(),
       ]);
     setClasses(classData);
     setCourses(courseData);
-    setSchedule(scheduleData);
+    setSchedule(Array.isArray(scheduleData) ? scheduleData : scheduleData.items || []);
     setAttendance(attendanceData);
-    setStats(statsData);
   }
 
   useEffect(() => {
@@ -68,7 +65,10 @@ export default function App() {
 
   async function handleGenerateSchedule(payload) {
     await api.generateSchedule(payload);
-    await refreshAll();
+  }
+
+  function handleScheduleChange(newSchedule) {
+    setSchedule(newSchedule);
   }
 
   async function handleRecordAttendance(payload) {
@@ -136,8 +136,8 @@ export default function App() {
               <ScheduleBoard
                 classes={classes}
                 courses={courses}
-                schedule={schedule}
                 onGenerate={handleGenerateSchedule}
+                onScheduleChange={handleScheduleChange}
               />
             )}
             {activeTab === "attendance" && (
@@ -149,7 +149,7 @@ export default function App() {
                 onRecord={handleRecordAttendance}
               />
             )}
-            {activeTab === "stats" && <HourStats stats={stats} />}
+            {activeTab === "stats" && <HourStats classes={classes} />}
           </>
         )}
       </main>

@@ -16,6 +16,17 @@ async function request(path, options = {}) {
   return response.json();
 }
 
+function buildQueryString(filters = {}) {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      params.append(key, value);
+    }
+  });
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}
+
 export const api = {
   getClasses: () => request("/classes"),
   createClass: (payload) =>
@@ -26,7 +37,8 @@ export const api = {
       body: JSON.stringify(payload),
     }),
   getCourses: () => request("/courses"),
-  getSchedule: () => request("/schedule"),
+  getSchedule: (filters) => request(`/schedule${buildQueryString(filters)}`),
+  getScheduleFilterOptions: () => request("/schedule/filter-options"),
   generateSchedule: (payload) =>
     request("/schedule/generate", {
       method: "POST",
@@ -35,5 +47,5 @@ export const api = {
   getAttendance: () => request("/attendance"),
   recordAttendance: (payload) =>
     request("/attendance", { method: "POST", body: JSON.stringify(payload) }),
-  getHourStats: () => request("/stats/hours"),
+  getHourStats: (filters) => request(`/stats/hours${buildQueryString(filters)}`),
 };

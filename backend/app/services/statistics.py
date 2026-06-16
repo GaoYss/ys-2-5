@@ -1,5 +1,5 @@
 from app.data.store import store
-from app.services.scheduler import enrich_session
+from app.services.scheduler import enrich_session, filter_schedule
 
 
 ATTENDANCE_WEIGHT = {
@@ -10,11 +10,21 @@ ATTENDANCE_WEIGHT = {
 }
 
 
-def calculate_hour_stats():
-    sessions = [enrich_session(item) for item in store.schedule]
+def calculate_hour_stats(class_id=None, teacher=None, room=None, date_from=None, date_to=None):
+    sessions = filter_schedule(
+        class_id=class_id,
+        teacher=teacher,
+        room=room,
+        date_from=date_from,
+        date_to=date_to,
+    )
     stats = []
 
-    for training_class in store.classes:
+    class_list = store.classes
+    if class_id:
+        class_list = [item for item in class_list if item["id"] == int(class_id)]
+
+    for training_class in class_list:
         class_sessions = [
             item for item in sessions if item["class_id"] == training_class["id"]
         ]
