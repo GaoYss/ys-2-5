@@ -342,6 +342,10 @@ td small {
   text-align: center;
 }
 
+.empty-state .primary-action {
+  margin-top: 12px;
+}
+
 .empty-state h3 {
   color: #415158;
   margin: 4px 0;

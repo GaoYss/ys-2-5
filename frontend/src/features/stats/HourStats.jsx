@@ -1,11 +1,11 @@
-import { Lightbulb } from "lucide-react";
+import { CalendarDays, Lightbulb } from "lucide-react";
 import { useEffect, useState } from "react";
 import { SectionHeader } from "../../components/SectionHeader";
 import { StatCard } from "../../components/StatCard";
 import { ScheduleFilter, defaultFilters } from "../../components/ScheduleFilter";
 import { api } from "../../services/api";
 
-export function HourStats({ classes }) {
+export function HourStats({ classes, onNavigateSchedule }) {
   const [filters, setFilters] = useState(defaultFilters);
   const [stats, setStats] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
@@ -102,6 +102,16 @@ export function HourStats({ classes }) {
                 ))}
               </ul>
             ) : null}
+            {onNavigateSchedule && (
+              <button
+                type="button"
+                className="primary-action"
+                onClick={onNavigateSchedule}
+              >
+                <CalendarDays size={16} />
+                去课程表生成排课
+              </button>
+            )}
           </div>
         ) : (
           <div className="responsive-table">

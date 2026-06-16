@@ -149,7 +149,12 @@ export default function App() {
                 onRecord={handleRecordAttendance}
               />
             )}
-            {activeTab === "stats" && <HourStats classes={classes} />}
+            {activeTab === "stats" && (
+              <HourStats
+                classes={classes}
+                onNavigateSchedule={() => setActiveTab("schedule")}
+              />
+            )}
           </>
         )}
       </main>
