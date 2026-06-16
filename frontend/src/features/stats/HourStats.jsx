@@ -52,6 +52,8 @@ export function HourStats({ classes }) {
     loadStats(defaultFilters);
   }
 
+  const hasData = stats.length > 0 && stats.some((item) => item.planned_hours > 0);
+
   const totalPlanned = stats.reduce((sum, item) => sum + item.planned_hours, 0);
   const totalAttended = stats.reduce((sum, item) => sum + item.attended_hours, 0);
   const avgRate = stats.length
@@ -73,20 +75,23 @@ export function HourStats({ classes }) {
         />
       </div>
 
-      <div className="metrics-grid">
-        <StatCard label="已排课时" value={totalPlanned} helper="按课程时长汇总" />
-        <StatCard label="有效出勤课时" value={totalAttended} helper="迟到与请假折算" />
-        <StatCard label="平均出勤率" value={`${avgRate}%`} helper="按班级平均" />
-      </div>
+      {hasData && (
+        <div className="metrics-grid">
+          <StatCard label="已排课时" value={totalPlanned} helper="按课程时长汇总" />
+          <StatCard label="有效出勤课时" value={totalAttended} helper="迟到与请假折算" />
+          <StatCard label="平均出勤率" value={`${avgRate}%`} helper="按班级平均" />
+        </div>
+      )}
 
       <div className="table-panel">
         <SectionHeader eyebrow="Hours" title="班级课时统计" />
-        {stats.length === 0 || stats.every((item) => item.planned_hours === 0) ? (
+        {!hasData ? (
           <div className="empty-state">
             <div className="empty-icon">
               <Lightbulb size={28} />
             </div>
             <h3>没有匹配的统计数据</h3>
+            <p>当前筛选条件下无有效排课记录，可参考以下建议调整：</p>
             {suggestions.length > 0 ? (
               <ul className="suggestions">
                 {suggestions.map((s, idx) => (
@@ -96,9 +101,7 @@ export function HourStats({ classes }) {
                   </li>
                 ))}
               </ul>
-            ) : (
-              <p>请调整筛选条件或先生成排课。</p>
-            )}
+            ) : null}
           </div>
         ) : (
           <div className="responsive-table">
